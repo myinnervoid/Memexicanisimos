@@ -1,0 +1,279 @@
+{
+    "annotations": {
+        "list": []
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": null,
+    "links": [],
+    "panels": [
+        {
+            "title": "🧠 Memorias Activas (Total)",
+            "type": "stat",
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 0,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "memex_memory_total",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 1000
+                            },
+                            {
+                                "color": "red",
+                                "value": 10000
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "title": "📦 Memorias Archivadas",
+            "type": "stat",
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 6,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "memex_memory_archived_total",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "fixedColor": "blue",
+                        "mode": "fixed"
+                    }
+                }
+            }
+        },
+        {
+            "title": "🔀 Entropy Score",
+            "type": "gauge",
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 12,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "memex_memory_entropy_score",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "min": 0,
+                    "max": 3,
+                    "thresholds": {
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 1.5
+                            },
+                            {
+                                "color": "red",
+                                "value": 2.0
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "title": "⏱️ Governance Cycle Duration (s)",
+            "type": "stat",
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 18,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "memex_governance_cycle_duration_seconds",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "s",
+                    "thresholds": {
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 1
+                            },
+                            {
+                                "color": "red",
+                                "value": 2
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "title": "📊 Memorias por Tipo",
+            "type": "piechart",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 4
+            },
+            "targets": [
+                {
+                    "expr": "memex_memory_count",
+                    "legendFormat": "{{type}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "title": "🤖 Tokens por Modelo",
+            "type": "barchart",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 4
+            },
+            "targets": [
+                {
+                    "expr": "memex_tokens_total",
+                    "legendFormat": "{{model}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "title": "🎯 Router Requests por Tier",
+            "type": "piechart",
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 0,
+                "y": 12
+            },
+            "targets": [
+                {
+                    "expr": "memex_router_tier_requests",
+                    "legendFormat": "{{tier}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "title": "📈 Misprediction Rate",
+            "type": "gauge",
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 8,
+                "y": 12
+            },
+            "targets": [
+                {
+                    "expr": "memex_router_misprediction_rate",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "min": 0,
+                    "max": 1,
+                    "unit": "percentunit",
+                    "thresholds": {
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 0.10
+                            },
+                            {
+                                "color": "red",
+                                "value": 0.15
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "title": "🧹 Governance Purge Count",
+            "type": "stat",
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 16,
+                "y": 12
+            },
+            "targets": [
+                {
+                    "expr": "memex_governance_purge_total",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "fixedColor": "orange",
+                        "mode": "fixed"
+                    }
+                }
+            }
+        }
+    ],
+    "schemaVersion": 39,
+    "tags": [
+        "memex",
+        "observability"
+    ],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "title": "Memexicanisimos OS — Observability",
+    "uid": "memex-obs-v4",
+    "version": 1
+}

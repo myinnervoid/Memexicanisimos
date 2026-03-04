@@ -1,0 +1,89 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: memex-ollama
+    restart: always
+    env_file:
+    - .env
+    volumes:
+    - ollama_data:/root/.ollama
+    - /home/myinnervoid/.ollama:/root/.ollama-host:ro
+    healthcheck:
+      test:
+      - CMD
+      - ollama
+      - list
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: memex-webui
+    restart: always
+    ports:
+    - ${WEBUI_PORT:-3000}:8080
+    volumes:
+    - open-webui-data:/app/backend/data
+    - ./memex_workspace:/app/backend/data/workspace
+    - /home/myinnervoid/.memex_os/core/setup_memex.py:/app/backend/setup_memex.py
+    - /home/myinnervoid/.memex_os/core/src/memex_tools.py:/app/backend/memex_tools.py
+    - /home/myinnervoid/.memex_os/core/src/prompt_injector_tool.py:/app/backend/prompt_injector_tool.py
+    - /home/myinnervoid/.memex_os/core/src/memex_router.py:/app/backend/memex_router.py
+    - /home/myinnervoid/.memex_os/core/src/memex_sandbox.py:/app/backend/memex_sandbox.py
+    - /home/myinnervoid/.memex_os/core/src/skill_context_optimizer.py:/app/backend/skill_context_optimizer.py
+    - /home/myinnervoid/.memex_os/core/src/skill_evaluator.py:/app/backend/skill_evaluator.py
+    - /home/myinnervoid/.memex_os/core/src/memory_governor.py:/app/backend/memory_governor.py
+    - /home/myinnervoid/.memex_os/core/src/memory_governance_skill.py:/app/backend/memory_governance_skill.py
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+      WEBUI_AUTH: 'True'
+      WEBUI_NAME: Memexicanisimos
+      WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
+      DATABASE_ENABLE_SQLITE_WAL: 'True'
+    depends_on:
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    command: bash -c "pip install passlib bcrypt pylint flake8 mypy bandit pyflakes
+      black isort && bash start.sh & until curl -s http://localhost:8080/health >
+      /dev/null; do sleep 2; done; python setup_memex.py; wait"
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: memex-qdrant
+    restart: always
+    ports:
+    - 6333:6333
+    volumes:
+    - qdrant-data:/qdrant/storage
+    mem_limit: 2g
+  daemon:
+    build: ./daemon
+    container_name: memex-daemon
+    restart: unless-stopped
+    profiles:
+    - daemon
+    volumes:
+    - ./memex_workspace:/app/workspace
+    depends_on:
+      ollama:
+        condition: service_healthy
+      open-webui:
+        condition: service_healthy
+    environment:
+      OPENWEBUI_API_URL: http://open-webui:8080/api
+      WORKSPACE_PATH: /app/workspace
+      CHECK_INTERVAL_MINUTES: '10'
+volumes:
+  ollama_data: null
+  open-webui-data: null
+  qdrant-data: null

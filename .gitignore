@@ -1,0 +1,53 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.spec
+
+# === Entorno ===
+.env
+*.env.local
+venv/
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === Workspace (datos de usuario) ===
+memex_workspace/
+*.db
+*.sqlite
+*.sqlite3
+
+# === Docker ===
+docker-compose.override.yml
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Logs ===
+*.log
+logs/
+
+# === Backups ===
+*.zip.bak
+
+# === Generados por el instalador ===
+install_state.json
+flavors_config.json
+
+# === Herramientas de desarrollo (no van al repo) ===
+.aider*
+.gsd/
+.agent/
+.gemini/
+adapters/
+sin_usar/
+.updater/

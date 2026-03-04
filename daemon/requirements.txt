@@ -1,0 +1,4 @@
+schedule
+requests
+gitpython
+PyGithub
