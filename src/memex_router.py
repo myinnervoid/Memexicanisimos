@@ -14,13 +14,14 @@ import json
 import os
 import re
 import time
+import requests
 from threading import Semaphore
 from typing import Optional
 
 from pydantic import BaseModel, Field
 
-
 TELEMETRY_PATH = "/app/backend/data/workspace/memex_telemetry.jsonl"
+OLLAMA_API_BASE = os.getenv("OLLAMA_BASE_URL", "http://host.docker.internal:11434")
 
 
 class Filter:
@@ -152,6 +153,30 @@ class Filter:
             "heavy": self.valves.heavy_model,
         }[tier]
 
+    def _ensure_model_exists(self, model_name: str):
+        """
+        Verifica si el modelo existe en la base de Ollama.
+        Si no existe, intenta mandar la señal de pull para evitar
+        que el pipeline colapse y de falsos timeouts.
+        """
+        try:
+            # 1. Comprobar si existe localmente
+            check_url = f"{OLLAMA_API_BASE}/api/show"
+            resp = requests.post(check_url, json={"name": model_name}, timeout=5)
+            if resp.status_code == 200:
+                return # El modelo existe
+            
+            # 2. Si llegamos aquí, el modelo no existe. Intentar Pull (non-blocking)
+            print(f"[Memex Router] ⚠️ Modelo '{model_name}' no existe localmente. Intentando Pull en background...")
+            pull_url = f"{OLLAMA_API_BASE}/api/pull"
+            # Mandamos stream=False para no colgar, aunque un modelo pesado tomará tiempo.
+            # En v2, pasaremos la responsabilidad al Daemon, pero esto evita crasheos puros.
+            requests.post(pull_url, json={"name": model_name, "stream": False}, timeout=1)
+        except requests.exceptions.Timeout:
+            pass # Ignoramos timeout intencional del request de pull
+        except Exception as e:
+            print(f"[Memex Router] Error en _ensure_model_exists para {model_name}: {e}")
+
     def inlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
         """
         Intercepta la petición ANTES de que llegue al LLM.
@@ -188,6 +213,9 @@ class Filter:
         print(f"[Memex Router] Score: {analysis['total']} → Tier: {tier} → Modelo: {target_model}")
         print(f"  Señales: code={analysis['code']}, reasoning={analysis['reasoning']}, "
               f"tools={analysis['tools']}, length={analysis['length']}, depth={analysis['depth']}")
+
+        # Validamos que el modelo exista, o disparamos un pull proactivo
+        self._ensure_model_exists(target_model)
 
         body["model"] = target_model
 

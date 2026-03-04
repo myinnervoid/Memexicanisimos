@@ -1422,8 +1422,14 @@ read -p "Presiona Enter para cerrar..."
     def _start_fresh_install(self):
         # Verificar prerequisitos antes de todo
         try:
-            subprocess.run(["docker", "--version"], capture_output=True, check=True)
-            subprocess.run(["docker", "compose", "version"], capture_output=True, check=True)
+            subprocess.run(["docker", "--version"], capture_output=True, check=True, timeout=5)
+            subprocess.run(["docker", "compose", "version"], capture_output=True, check=True, timeout=5)
+        except subprocess.TimeoutExpired:
+            messagebox.showerror(
+                "Timeout",
+                "El comando de Docker tardó demasiado en responder.\nRevisa el rendimiento del sistema."
+            )
+            return
         except (subprocess.CalledProcessError, FileNotFoundError):
             messagebox.showerror(
                 "Docker No Encontrado",
@@ -2147,9 +2153,13 @@ read -p "Presiona Enter para cerrar..."
                 ['docker', 'exec', 'memex-ollama', 'ollama', 'list'],
                 capture_output=True, text=True, timeout=10
             )
-            status_parts.append("=== 🤖 Modelos en Ollama ===\n" + (result.stdout or "No se pudo obtener lista."))
-        except Exception:
-            status_parts.append("=== Modelos ===\nContenedor Ollama no disponible.\n")
+            status_parts.append("=== 🤖 Modelos en Ollama ===\n" + (result.stdout or "No hay modelos (o fallo en conexión)."))
+        except subprocess.TimeoutExpired:
+            status_parts.append("=== 🤖 Modelos en Ollama ===\n⚠️ Timeout en conexión con el daemon de Ollama.\n")
+        except FileNotFoundError:
+            status_parts.append("=== 🐳 Docker ===\n❌ Docker no está instalado o no está en el PATH.\n")
+        except Exception as e:
+            status_parts.append(f"=== Modelos ===\nError desconocido consultando Ollama: {type(e).__name__}\n")
 
         # Hardware
         status_parts.append(

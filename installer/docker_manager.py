@@ -32,19 +32,24 @@ class DockerManager:
                 logger.info(f"[*] Recreando aisaldamente el servicio '{service}'...")
                 cmd = ["docker", "compose", "up", "-d", "--force-recreate", "--no-deps", service]
                 # Ejecutar en la raíz del proyecto
-                subprocess.run(cmd, cwd=PROJECT_DIR, check=True)
+                subprocess.run(cmd, cwd=PROJECT_DIR, check=True, timeout=120)
                 
                 # Si es WebUI, podríamos querer re-inyectar los scripts por si acaso
                 if service == "open-webui" and open_webui_fix:
                     logger.info(f"[*] Post-instalando herramientas en {service}...")
                     subprocess.run(
                         ["docker", "compose", "exec", "-T", "open-webui", "python", "/app/backend/setup_memex.py"],
-                        cwd=PROJECT_DIR
+                        cwd=PROJECT_DIR,
+                        timeout=30
                     )
                 logger.info(f"[+] Servicio '{service}' recreado con éxito.")
                 # Aquí se podría emitir un evento para GUI, pero mantenemos simpleza
+            except subprocess.TimeoutExpired as e:
+                logger.error(f"[!] Timeout excedido recreando {service}: {e}")
+            except subprocess.CalledProcessError as e:
+                logger.error(f"[!] Error de ejecución de Docker recreando {service}: {e}")
             except Exception as e:
-                logger.error(f"[!] Error recreando {service}: {str(e)}")
+                logger.error(f"[!] Error desconocido recreando {service}: {str(e)}")
 
         DockerManager._execute_in_background(_worker)
 
@@ -109,7 +114,7 @@ class DockerManager:
             # Check si aider vive en compose
             result = subprocess.run(
                 ['docker', 'compose', 'config', '--services'],
-                capture_output=True, text=True, timeout=5, cwd=cwd
+                capture_output=True, text=True, timeout=10, cwd=cwd
             )
             if 'aider' not in result.stdout:
                 return False, "El servicio Aider no está en tu docker-compose.yml. Reinstala con opción Aider."
@@ -135,5 +140,9 @@ class DockerManager:
             else:
                 return False, f"Comando fallback: cd {cwd} && {cmd}"
                 
+        except subprocess.TimeoutExpired:
+            return False, "Timeout verficando configuración de Aider."
+        except FileNotFoundError:
+            return False, "Docker no está instalado o no está en PATH."
         except Exception as e:
             return False, f"Error imprevisto: {str(e)}"

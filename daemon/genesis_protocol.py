@@ -36,15 +36,55 @@ import platform
 import psutil
 import requests
 import pyautogui
+import threading
 
 # ── Configuración ───────────────────────────────────────────────────────────
 OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
 MODEL = "qwen2.5-coder:7b"
 
-# Seguridad: mover el mouse a una esquina aborta todo (fail-safe de pyautogui)
-pyautogui.FAILSAFE = True
-# Pausa mínima entre acciones de pyautogui (previene ráfagas)
+# Seguridad: mover el mouse a una esquina aborta todo, pero con DEBOUNCE
+# para evitar abortos accidentales.
+pyautogui.FAILSAFE = False
 pyautogui.PAUSE = 0.25
+
+class MouseFailSafeListener(threading.Thread):
+    """
+    Monitor de seguridad asíncrono. Si el usuario arrincona el ratón
+    durante `debounce_seconds`, aborta la ejecución con FailSafeException.
+    """
+    def __init__(self, debounce_seconds: float = 3.0):
+        super().__init__(daemon=True)
+        self.debounce_seconds = debounce_seconds
+        self.screen_w, self.screen_h = pyautogui.size()
+        self.corner_threshold = 5 # pixels margin
+
+    def _is_in_corner(self, x, y):
+        w, h = self.screen_w, self.screen_h
+        t = self.corner_threshold
+        # Check if in any of the 4 corners
+        return (x <= t and y <= t) or \
+               (x >= w - t and y <= t) or \
+               (x <= t and y >= h - t) or \
+               (x >= w - t and y >= h - t)
+
+    def run(self):
+        time_in_corner = 0.0
+        poll_rate = 0.1
+        while True:
+            x, y = pyautogui.position()
+            if self._is_in_corner(x, y):
+                time_in_corner += poll_rate
+                if time_in_corner >= self.debounce_seconds:
+                    print(f"\n🛑 [SEGURIDAD] Ratón arrinconado por {self.debounce_seconds}s. Abortando control físico.", flush=True)
+                    # Force exit the whole application since threads can't easily raise to main
+                    os.kill(os.getpid(), signal.SIGINT) 
+            else:
+                time_in_corner = 0.0
+            time.sleep(poll_rate)
+
+# Start the global safety monitor
+_safety_monitor = MouseFailSafeListener(debounce_seconds=3.0)
+_safety_monitor.start()
 
 # Control físico condicional (configurado desde la GUI)
 ALLOW_PHYSICAL = os.environ.get("MEMEX_ALLOW_PHYSICAL", "0") == "1"
@@ -283,7 +323,6 @@ def _preflight_checks() -> bool:
             print("⚠️  Pre-flight: La resolución de pantalla detectada es inválida.")
             return False
             
-        # Comprobar si el fail-safe local existe y no está gatillado
         pyautogui.position()
         return True
     except pyautogui.FailSafeException:

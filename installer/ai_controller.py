@@ -26,6 +26,10 @@ class AIController:
                         parts = line.split()
                         if parts:
                             installed.append(parts[0])
+        except subprocess.TimeoutExpired:
+            logger.error("[AIController] Timeout listando modelos (Daemon sobrecargado).")
+        except FileNotFoundError:
+            logger.error("[AIController] Docker no está en PATH.")
         except Exception as e:
             logger.error(f"[AIController] Error listando modelos: {e}")
             
