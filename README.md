@@ -4,6 +4,8 @@
 
 Memexicanisimos OS is not just a chatbot; it's a **complete local AI MLOps ecosystem** designed to run smoothly on consumer hardware (8GB - 16GB RAM). It unifies visual planning and code execution into a single shared AI brain.
 
+We look for privacy
+
 [Lee esto en Español.](README.es.md)
 
 ---
