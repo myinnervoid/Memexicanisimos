@@ -31,12 +31,25 @@
 - Cada servicio se actualiza independientemente: `docker compose pull` → `up -d`
 - Re-inyección automática de herramientas tras actualizar Open WebUI
 
-### Escáner Inteligente de Puertos
+### Gestor de Conexiones y Puertos Dinámicos
 
 - Verifica si el puerto 3000 está ocupado antes de instalar
 - Identifica qué proceso usa cada puerto (vía `ss`)
 - Busca puertos libres en el rango 3001-3020
 - Genera `.env` y `docker-compose.yml` con el puerto correcto
+- **Nueva pestaña interactiva** para ver estado (En línea/Caído) de todos los servicios.
+- Permite cambiar en caliente el puerto WebUI modificando el `.env` y recreando el contenedor.
+
+### Solucionador AI & FAQ Clínico
+
+- Nueva pestaña "🆘 Solucionador" incrustada en el Panel de Control.
+- Provee soluciones rápidas de un clic para errores top (502, RAM, Puertos Múltiples).
+- **Generador de Prompt:** Al seleccionar un servicio defectuoso, la GUI extrae los últimos 100 logs de Docker de forma transparente y envuelve esa telemetría dentro de una plantilla de prompt de IA lista para diagnóstico y copiado rápido.
+
+### Robustez Global de Energía (Auto-Clean)
+
+- Los botones de la pestaña de **Energía** (Encender / Reiniciar ecosistema) ahora analizan estáticamente los comandos Docker Compose para pre-inyectar una orden a `_force_stop_container` sobre todos los dependientes.
+- Evita el error crónico *"The container name is already in use"* causado por huérfanos generados en otras sesiones, priorizando direct `docker rm -f` nativo frente al `compose stop`.
 
 ### Centro de Descarga de Modelos
 

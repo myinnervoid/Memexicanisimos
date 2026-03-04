@@ -13,7 +13,9 @@ Memexicanisimos OS is not just a chatbot; it's a **complete local AI MLOps ecosy
 - **Modern GUI:** Fully migrated to **CustomTkinter** with professional dark theme and sidebar navigation.
 - **Dynamic Model Catalog:** Automatically recommends the best AI models for your hardware tier (2GB→70B), with categories: General, Coder, Reasoning, Embedding.
 - **Selective Updater:** Update Ollama, Open WebUI, or Qdrant independently — no need to restart everything.
-- **Smart Port Scanner:** Detects occupied ports (3000-3020) and auto-suggests free alternatives. No more installation failures due to port conflicts.
+- **Smart Port Scanner & Connection Manager:** Detects occupied ports (3000-3020) and auto-suggests free alternatives. Includes a real-time 'Connections' dashboard to hot-swap Open WebUI ports and view service status.
+- **AI Problem Solver (FAQ):** A built-in troubleshooting 'Solucionador' tab that analyzes Docker logs and formats them into clinical AI prompts ready to copy & paste for instant technical support.
+- **Global Power Robustness:** Auto-cleanup logic in the power buttons prevents "container name already in use" conflict errors by forcefully destroying orphans before recreating networks.
 - **Skip Model Download:** New checkbox to skip model download during installation — useful for migrating existing local Ollama models.
 - **Model Download Center:** Browse, filter by category, and download any model from the catalog or enter custom model names.
 

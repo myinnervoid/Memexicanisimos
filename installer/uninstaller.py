@@ -11,8 +11,10 @@ class MemexUninstaller:
     def uninstall(keep_data: bool = True, cwd: str = "."):
         """
         Detiene los contenedores y elimina volúmenes opcionalmente.
+        Retorna True solo si todas las operaciones críticas fueron exitosas.
         """
         logger.info("=== Iniciando proceso de Desinstalación ===")
+        all_ok = True
         
         # 1. Detener contenedores
         logger.info("[*] Deteniendo servicios y eliminando red interna...")
@@ -24,6 +26,7 @@ class MemexUninstaller:
         
         if not success:
             logger.error("[!] Hubo problemas deteniendo Docker Compose. Puede que ya estuviera abajo.")
+            all_ok = False
         else:
             logger.info("[+] Servicios detenidos correctamente.")
 
@@ -37,6 +40,7 @@ class MemexUninstaller:
                     logger.info(f"[-] Archivo {f} eliminado.")
                 except Exception as e:
                     logger.error(f"[!] No se pudo eliminar {f}: {e}")
+                    all_ok = False
 
         # 3. Datos del workspace local si decide no conservarlos
         if not keep_data:
@@ -48,8 +52,9 @@ class MemexUninstaller:
                     logger.info("[-] Directorio memex_workspace eliminado.")
                 except Exception as e:
                     logger.error(f"[!] No se pudo eliminar completamente {workspace_dir}: {e}")
+                    all_ok = False
             else:
                 logger.info("[-] No se encontró memex_workspace local para eliminar.")
 
         logger.info("=== Desinstalación completada ===")
-        return True
+        return all_ok

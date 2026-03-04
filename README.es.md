@@ -13,7 +13,9 @@ Memexicanisimos OS no es solo un chatbot; es un **ecosistema completo de Intelig
 - **GUI Moderna:** Migración completa a **CustomTkinter** con tema oscuro profesional y navegación por barra lateral.
 - **Catálogo Dinámico de Modelos:** Recomienda automáticamente los mejores modelos de IA para tu hardware (2GB→70B), con categorías: General, Coder, Reasoning, Embedding.
 - **Actualizador Selectivo:** Actualiza Ollama, Open WebUI o Qdrant de forma independiente — sin reiniciar todo.
-- **Escáner de Puertos Inteligente:** Detecta puertos ocupados (3000-3020) y sugiere alternativas libres. Adiós a los fallos de instalación por conflictos de puertos.
+- **Gestor de Conexiones y Puertos Dinámicos:** Detecta puertos ocupados (3000-3020) y sugiere alternativas libres. Incluye un panel de 'Conexiones' en tiempo real para reasignar el puerto de Open WebUI en caliente y ver el estado de cada servicio.
+- **Solucionador IA (FAQ Clínico):** Pestaña integrada de 'Solucionador' que detecta fallos, extrae los últimos logs de Docker y los formatea automáticamente en un Prompt Clínico listo para copiar y pegar y obtener soporte técnico casi instantáneo.
+- **Limpieza Automática y Robustez:** Los botones de Energía ahora destruyen forzosamente los contenedores huérfanos antes de recrear las redes, extinguiendo para siempre los errores por colisión de nombres (*"container already in use"*).
 - **Omitir Descarga de Modelo:** Nuevo checkbox para omitir la descarga del modelo durante la instalación — útil para migrar modelos locales de Ollama.
 - **Centro de Descarga de Modelos:** Navega, filtra por categoría y descarga cualquier modelo del catálogo o escribe nombres de modelos personalizados.
 

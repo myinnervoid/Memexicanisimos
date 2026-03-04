@@ -487,6 +487,8 @@ class MemexInstallerGUI(ctk.CTk):
 
         tab_power = notebook.add("🔌 Energía")
         tab_quick = notebook.add("🚀 Acceso")
+        tab_conn = notebook.add("🔗 Conexiones")
+        tab_solver = notebook.add("🆘 Solucionador")
         tab_tools = notebook.add("🛠️ Herramientas")
         tab_data = notebook.add("💾 Datos")
         tab_hw = notebook.add("⚙️ Hardware")
@@ -499,6 +501,9 @@ class MemexInstallerGUI(ctk.CTk):
         ctk.CTkButton(tab_power, text="🟢 Encender Todo el Ecosistema",
                    command=lambda: self._exec_power_cmd("docker compose up -d"),
                    fg_color="#2FA572", hover_color="#1F754E", width=350).pack(pady=4)
+        ctk.CTkButton(tab_power, text="🔄 Reiniciar Todo el Ecosistema",
+                   command=lambda: self._exec_power_cmd("docker compose down && docker compose up -d"),
+                   fg_color="#F0AD4E", hover_color="#D99A3E", width=350).pack(pady=4)
         ctk.CTkButton(tab_power, text="🔴 Apagar Todo y Liberar RAM",
                    command=lambda: self._exec_power_cmd("docker compose down"),
                    fg_color="#D9534F", hover_color="#A94442", width=350).pack(pady=4)
@@ -534,7 +539,13 @@ class MemexInstallerGUI(ctk.CTk):
         for text, cmd in core_buttons:
             ctk.CTkButton(tab_quick, text=text, command=cmd, width=350).pack(pady=5)
 
-        # ── Pestaña 3: Herramientas ───────────────────────────────────────
+        # ── Pestaña 3: Gestor de Conexiones ─────────────────────────────────
+        self._build_connections_tab(tab_conn)
+
+        # ── Pestaña 4: Solucionador (FAQ y Prompts IA) ──────────────────────
+        self._build_solver_tab(tab_solver)
+
+        # ── Pestaña 5: Herramientas ───────────────────────────────────────
         tool_buttons = [
             ("⚙️ Inyectar herramientas (setup_memex)", self._inject_tools),
             ("📥 Descargar modelos adicionales", self._download_models),
@@ -598,8 +609,8 @@ class MemexInstallerGUI(ctk.CTk):
                 
             q_limit = self.qdrant_ram.get()
             w_limit = self.webui_ram.get()
-            success = DockerManager.apply_resource_limits(compose_path, "memex-qdrant", q_limit)
-            success = success and DockerManager.apply_resource_limits(compose_path, "memex-webui", w_limit)
+            success = DockerManager.apply_resource_limits(compose_path, "qdrant", q_limit)
+            success = success and DockerManager.apply_resource_limits(compose_path, "open-webui", w_limit)
             
             if success:
                 messagebox.showinfo("Éxito", "Límites aplicados al Compose.\nLos cambios surtirán efecto al reiniciar los contenedores.")
@@ -883,17 +894,39 @@ read -p "Presiona Enter para cerrar..."
         """Agrega texto al área de log y al dash_log (100% thread-safe vía after)."""
         def _update_ui():
             if hasattr(self, 'log_area') and self.log_area:
+                self.log_area.configure(state="normal")
                 self.log_area.insert(tk.END, message + "\n")
                 self.log_area.see(tk.END)
             if hasattr(self, 'dash_log') and self.dash_log:
+                self.dash_log.configure(state="normal")
                 self.dash_log.insert(tk.END, message + "\n")
                 self.dash_log.see(tk.END)
+                self.dash_log.configure(state="disabled")
         self.after(0, _update_ui)
 
     def _exec_power_cmd(self, cmd):
         """Ejecuta un comando de control de energía con feedback en el dashboard log."""
         def _worker():
             self.log(f"\n⚡ Ejecutando: {cmd}")
+            
+            # Auto-cleanup before starting containers to avoid name conflicts
+            if " up " in cmd:
+                parts = cmd.split(" up ")
+                if len(parts) > 1:
+                    args = parts[1].strip().split()
+                    # Ignorar flags como -d o --force-recreate
+                    services = [s for s in args if not s.startswith("-")]
+                    
+                    self.log("  🧹 Limpiando contenedores previos para evitar conflictos...")
+                    if not services:
+                        # Si no hay servicios específicos, es un "up" global
+                        for svc in ["qdrant", "searxng", "ollama", "open-webui", "daemon", "aider"]:
+                            self._force_stop_container(svc)
+                    else:
+                        # Limpiar solo los servicios solicitados
+                        for svc in services:
+                            self._force_stop_container(svc)
+            
             try:
                 process = subprocess.Popen(
                     cmd, shell=True, cwd=PROJECT_DIR,
@@ -908,6 +941,11 @@ read -p "Presiona Enter para cerrar..."
                     self.log(f"❌ Comando falló (código {process.returncode}).")
             except Exception as e:
                 self.log(f"❌ Excepción: {e}")
+                
+            # If we just started services, refresh the connections tab
+            if " up " in cmd or " start " in cmd or " down " in cmd or " stop " in cmd:
+                self.after(2000, self._refresh_connections)
+                
         threading.Thread(target=_worker, daemon=True).start()
 
     def _reset_progress_frame(self):
@@ -951,8 +989,369 @@ read -p "Presiona Enter para cerrar..."
             self.log(f"[ERROR] Excepción: {str(e)}")
             return False
 
-    def _wait_for_health(self, port=3000, timeout=120):
+    # Mapeo servicio-compose → nombre real del contenedor Docker
+    CONTAINER_NAMES = {
+        "ollama": "memex-ollama",
+        "open-webui": "memex-webui",
+        "qdrant": "memex-qdrant",
+        "searxng": "memex-searxng",
+        "daemon": "memex-daemon",
+        "aider": "memex-aider-cli",
+    }
+
+    def _force_stop_container(self, service_name):
+        """
+        Detiene y elimina un contenedor de forma robusta.
+        Usa docker directo con el nombre del contenedor (más fiable que compose).
+        """
+        container = self.CONTAINER_NAMES.get(service_name, f"memex-{service_name}")
+        self.log(f"  🔧 Deteniendo y eliminando contenedor '{container}'...")
+        # docker stop es graceful (SIGTERM + timeout), docker rm -f es forzado
+        self._run_cmd(f"docker stop {container} 2>/dev/null || true", f"Deteniendo {container}")
+        self._run_cmd(f"docker rm -f {container} 2>/dev/null || true", f"Eliminando {container}")
+
+    def _get_current_port(self):
+        """Lee el puerto configurado del .env, con fallback a docker inspect."""
+        env_path = os.path.join(PROJECT_DIR, ".env")
+        if os.path.exists(env_path):
+            with open(env_path, encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith("WEBUI_PORT="):
+                        try:
+                            return int(line.split("=", 1)[1].strip())
+                        except ValueError:
+                            pass
+        # Fallback: pregunta a Docker directamente
+        try:
+            r = subprocess.run(
+                ["docker", "port", "memex-webui", "8080"],
+                capture_output=True, text=True, timeout=5
+            )
+            if r.returncode == 0 and r.stdout.strip():
+                return int(r.stdout.strip().split(":")[-1])
+        except Exception:
+            pass
+        return 3000  # Default
+
+    def _build_solver_tab(self, parent):
+        """Construye la pestaña del Solucionador (FAQ y Generador de Prompts)."""
+        ctk.CTkLabel(parent, text="🆘 Solucionador IA & FAQ",
+                  font=ctk.CTkFont(size=16, weight='bold')).pack(pady=(10, 2))
+        ctk.CTkLabel(parent, text="Diagnóstico y generación de prompts de ayuda",
+                  text_color="gray", font=ctk.CTkFont(size=11)).pack(pady=(0, 10))
+
+        # --- SECCIÓN 1: FAQ Rápido ---
+        faq_frame = ctk.CTkFrame(parent, corner_radius=8)
+        faq_frame.pack(fill="x", padx=15, pady=5)
+        
+        ctk.CTkLabel(faq_frame, text="💡 Soluciones Rápidas", font=ctk.CTkFont(weight='bold')).pack(anchor="w", padx=10, pady=(5, 0))
+        
+        faqs = [
+            ("Error 502 Bad Gateway en WebUI", "Open WebUI está arrancando (puede tardar 1-2 min). Revisa 'Conexiones' o espera."),
+            ("The container name is already in use", "Usa los botones de '🔌 Energía' (como Reiniciar Todo) para limpiar conflictos automáticamente."),
+            ("Ollama no responde / Modelos no cargan", "Apaga todo, haz clic en 'Limpiar Redes Huérfanas' (Peligro) y Reinicia el Ecosistema."),
+            ("Quedarse sin RAM / Congelamientos", "Usa 'Apagar Todo y Liberar RAM'. Luego en 'Hardware', aplica 'Límites Conservadores'.")
+        ]
+        for issue, solution in faqs:
+            lbl = ctk.CTkLabel(faq_frame, text=f"• {issue}: ", font=ctk.CTkFont(size=11, weight="bold"))
+            lbl.pack(anchor="w", padx=15, pady=(2, 0))
+            ctk.CTkLabel(faq_frame, text=solution, text_color="#A9A9A9", font=ctk.CTkFont(size=11)).pack(anchor="w", padx=25, pady=(0, 2))
+
+        # --- SECCIÓN 2: Generador de Prompts IA ---
+        prompt_frame = ctk.CTkFrame(parent, corner_radius=8)
+        prompt_frame.pack(fill="both", expand=True, padx=15, pady=(10, 5))
+        
+        ctk.CTkLabel(prompt_frame, text="🤖 Constructor de Prompt de Diagnóstico", font=ctk.CTkFont(weight='bold')).pack(anchor="w", padx=10, pady=5)
+        ctk.CTkLabel(prompt_frame, text="Selecciona la app que falla para extraer sus logs y crear un prompt para la IA.", 
+                     text_color="gray", font=ctk.CTkFont(size=11)).pack(anchor="w", padx=10)
+
+        # Controles
+        ctrl_frame = ctk.CTkFrame(prompt_frame, fg_color="transparent")
+        ctrl_frame.pack(fill="x", padx=10, pady=10)
+        
+        self.solver_svc_var = tk.StringVar(value="memex-ollama")
+        services = ["memex-ollama", "open-webui", "memex-qdrant", "memex-searxng", "memex-daemon"]
+        
+        ctk.CTkComboBox(ctrl_frame, values=services, variable=self.solver_svc_var, width=200).pack(side="left", padx=(0, 10))
+        ctk.CTkButton(ctrl_frame, text="🛠️ Generar Prompt Clínico", 
+                      command=self._generate_ai_prompt, 
+                      fg_color="#337AB7", hover_color="#286090").pack(side="left")
+
+        # TextBox para el prompt generado
+        self.solver_textbox = ctk.CTkTextbox(prompt_frame, height=120, font=ctk.CTkFont(family="monospace", size=10))
+        self.solver_textbox.pack(fill="both", expand=True, padx=10, pady=5)
+        self.solver_textbox.insert("0.0", "Haz clic en 'Generar Prompt Clínico' para extraer los logs...")
+
+        # Botón Copiar
+        self.btn_copy_prompt = ctk.CTkButton(prompt_frame, text="📋 Copiar Prompt al Portapapeles", 
+                                           command=self._copy_solver_prompt, 
+                                           fg_color="#5CB85C", hover_color="#4CAE4C", state="disabled")
+        self.btn_copy_prompt.pack(pady=(5, 10))
+
+    def _generate_ai_prompt(self):
+        """Extrae los logs del contenedor seleccionado y arma el prompt pre-formateado."""
+        service = self.solver_svc_var.get()
+        self.solver_textbox.delete("0.0", tk.END)
+        self.solver_textbox.insert("0.0", f"Extrayendo últimos 100 logs de {service}...\n")
+        self.btn_copy_prompt.configure(state="disabled", text="📋 Copiar Prompt al Portapapeles")
+        self.update()
+
+        def _worker():
+            try:
+                # Extraer logs
+                result = subprocess.run(
+                    ["docker", "logs", "--tail", "100", service],
+                    capture_output=True, text=True, timeout=10
+                )
+                
+                # Combine stdout and stderr for docker logs
+                logs = result.stdout + "\n" + result.stderr
+                logs = logs.strip()
+                
+                if not logs:
+                    prompt = f"No pude extraer logs de {service}. ¿Está el contenedor creado?\nRevisa la pestaña 'Conexiones'."
+                    self.after(0, lambda: self._update_solver_text(prompt, False))
+                    return
+
+                # Template del prompt
+                prompt = (
+                    "Soy administrador del sistema Memexicanisimos OS (un stack Docker de IA local). "
+                    f"Estoy teniendo problemas con el contenedor '{service}'.\n\n"
+                    "Por favor, revisa mis últimos 100 logs y dime:\n"
+                    "1. ¿Cuál es la causa raíz del problema?\n"
+                    "2. ¿Cuál es el comando exacto o la acción que debo realizar para solucionarlo?\n\n"
+                    "=== INICIO DE LOGS MARKBOT ===\n"
+                    "```log\n"
+                    f"{logs[-3000:]}\n" # Limitar a los últimos 3000 caracteres por seguridad de portapapeles
+                    "```\n"
+                    "=== FIN DE LOGS ===\n"
+                )
+                self.after(0, lambda: self._update_solver_text(prompt, True))
+            except subprocess.TimeoutExpired:
+                self.after(0, lambda: self._update_solver_text("Error: Timeout al extraer logs de Docker.", False))
+            except Exception as e:
+                self.after(0, lambda: self._update_solver_text(f"Error extrayendo logs: {str(e)}", False))
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def _update_solver_text(self, text, enable_copy):
+        """Actualiza el textbox del solucionador."""
+        self.solver_textbox.delete("0.0", tk.END)
+        self.solver_textbox.insert("0.0", text)
+        if enable_copy:
+            self.btn_copy_prompt.configure(state="normal")
+            
+    def _copy_solver_prompt(self):
+        """Copia el texto del solucionador al portapapeles."""
+        text = self.solver_textbox.get("0.0", tk.END).strip()
+        if text:
+            self.clipboard_clear()
+            self.clipboard_append(text)
+            self.btn_copy_prompt.configure(text="✅ ¡Copiado!")
+            self.after(2000, lambda: self.btn_copy_prompt.configure(text="📋 Copiar Prompt al Portapapeles"))
+
+    def _check_service_status(self, container_name):
+        """Verifica si un contenedor está corriendo. Retorna (running: bool, status: str)."""
+        try:
+            r = subprocess.run(
+                ["docker", "inspect", "--format", "{{.State.Status}}", container_name],
+                capture_output=True, text=True, timeout=5
+            )
+            if r.returncode == 0:
+                status = r.stdout.strip()
+                return status == "running", status
+        except Exception:
+            pass
+        return False, "no encontrado"
+
+    def _build_connections_tab(self, parent):
+        """Construye la pestaña de Gestor de Conexiones."""
+        ctk.CTkLabel(parent, text="🔗 Gestor de Conexiones",
+                  font=ctk.CTkFont(size=16, weight='bold')).pack(pady=(10, 5))
+        ctk.CTkLabel(parent, text="Estado de los servicios y configuración de puertos",
+                  text_color="gray", font=ctk.CTkFont(size=11)).pack(pady=(0, 10))
+
+        # Frame con scroll para las cards de servicios
+        self.conn_scroll = ctk.CTkScrollableFrame(parent, height=250)
+        self.conn_scroll.pack(fill="both", expand=True, padx=15, pady=5)
+
+        self._refresh_connections()
+
+        # Botones de acción
+        btn_frame = ctk.CTkFrame(parent, fg_color="transparent")
+        btn_frame.pack(pady=10)
+        ctk.CTkButton(btn_frame, text="🔄 Refrescar Estado",
+                   command=self._refresh_connections,
+                   fg_color="#5CB85C", hover_color="#4CAE4C", width=180).pack(side="left", padx=5)
+        ctk.CTkButton(btn_frame, text="🔀 Cambiar Puerto WebUI",
+                   command=self._change_webui_port_dialog,
+                   fg_color="#337AB7", hover_color="#286090", width=180).pack(side="left", padx=5)
+
+    def _refresh_connections(self):
+        """Refresca el estado de las conexiones de todos los servicios."""
+        for widget in self.conn_scroll.winfo_children():
+            widget.destroy()
+
+        current_port = self._get_current_port()
+
+        services = [
+            ("🌐 Open WebUI", "memex-webui", f"Puerto: {current_port}", f"http://localhost:{current_port}"),
+            ("🧠 Ollama", "memex-ollama", "Puerto: 11434 (interno)", None),
+            ("🗄️ Qdrant", "memex-qdrant", "Puerto: 6333", "http://localhost:6333"),
+            ("🔍 SearxNG", "memex-searxng", "Puerto: 8080 (interno)", None),
+            ("🤖 Daemon", "memex-daemon", "Perfil: daemon", None),
+        ]
+
+        for label, container, port_info, url in services:
+            running, status = self._check_service_status(container)
+
+            card = ctk.CTkFrame(self.conn_scroll, corner_radius=8,
+                              fg_color="#1a3a1a" if running else "#3a1a1a")
+            card.pack(fill="x", pady=3, padx=5)
+            card.grid_columnconfigure(1, weight=1)
+
+            indicator = "🟢" if running else "🔴"
+            status_text = "En línea" if running else status.capitalize()
+
+            ctk.CTkLabel(card, text=f"{indicator} {label}",
+                      font=ctk.CTkFont(size=13, weight='bold')).grid(
+                          row=0, column=0, sticky="w", padx=10, pady=(8, 2))
+
+            ctk.CTkLabel(card, text=f"{port_info}  —  {status_text}",
+                      text_color="#90EE90" if running else "#FF6B6B",
+                      font=ctk.CTkFont(size=11)).grid(
+                          row=1, column=0, sticky="w", padx=10, pady=(0, 8))
+
+            if url and running:
+                ctk.CTkButton(card, text="Abrir ↗",
+                           command=lambda u=url: __import__('webbrowser').open(u),
+                           width=60, height=28,
+                           fg_color="#337AB7", hover_color="#286090").grid(
+                               row=0, column=1, rowspan=2, sticky="e", padx=10, pady=5)
+
+        # Info del puerto actual
+        info_frame = ctk.CTkFrame(self.conn_scroll, corner_radius=8, fg_color="#2b2b2b")
+        info_frame.pack(fill="x", pady=(10, 3), padx=5)
+        ctk.CTkLabel(info_frame, text=f"📍 Puerto WebUI en .env: {current_port}",
+                  font=ctk.CTkFont(size=12)).pack(anchor="w", padx=10, pady=5)
+        ctk.CTkLabel(info_frame, text=f"🌐 URL: http://localhost:{current_port}",
+                  text_color="#87CEEB", font=ctk.CTkFont(size=11)).pack(anchor="w", padx=10, pady=(0, 5))
+
+    def _change_webui_port_dialog(self):
+        """Abre un diálogo para cambiar el puerto de Open WebUI."""
+        current = self._get_current_port()
+
+        win = ctk.CTkToplevel(self)
+        win.title("🔀 Cambiar Puerto de Open WebUI")
+        win.geometry("400x280")
+        win.resizable(False, False)
+        win.transient(self)
+        win.after(200, lambda: win.grab_set())
+
+        ctk.CTkLabel(win, text="🔀 Cambiar Puerto de Open WebUI",
+                  font=ctk.CTkFont(size=15, weight='bold')).pack(pady=(15, 5))
+        ctk.CTkLabel(win, text=f"Puerto actual: {current}",
+                  text_color="gray").pack(pady=2)
+
+        ctk.CTkLabel(win, text="Nuevo puerto:",
+                  font=ctk.CTkFont(size=12)).pack(pady=(15, 3))
+        port_var = tk.StringVar(value=str(current))
+        port_entry = ctk.CTkEntry(win, textvariable=port_var, width=150,
+                                justify="center", font=ctk.CTkFont(size=14))
+        port_entry.pack(pady=5)
+
+        # Mostrar puertos ocupados conocidos
+        occupied = []
+        for p in [3000, 3001, 3002, 3003, 3004, 3005]:
+            if self._is_port_in_use(p) and p != current:
+                occupied.append(str(p))
+        if occupied:
+            ctk.CTkLabel(win, text=f"⚠️ Puertos ocupados: {', '.join(occupied)}",
+                      text_color="#FF8C00", font=ctk.CTkFont(size=10)).pack(pady=2)
+
+        def do_change():
+            try:
+                new_port = int(port_var.get().strip())
+            except ValueError:
+                messagebox.showerror("Error", "El puerto debe ser un número válido.")
+                return
+            if new_port < 1024 or new_port > 65535:
+                messagebox.showerror("Error", "El puerto debe estar entre 1024 y 65535.")
+                return
+            if new_port == current:
+                win.destroy()
+                return
+            if self._is_port_in_use(new_port):
+                if not messagebox.askyesno("⚠️ Puerto Ocupado",
+                    f"El puerto {new_port} está en uso por otro servicio.\n\n"
+                    f"¿Deseas usarlo de todas formas?\n"
+                    f"(Esto podría causar conflictos)"):
+                    return
+            win.destroy()
+            self._change_webui_port(new_port)
+
+        btn_frame = ctk.CTkFrame(win, fg_color="transparent")
+        btn_frame.pack(pady=15)
+        ctk.CTkButton(btn_frame, text="✅ Aplicar Cambio", command=do_change,
+                   fg_color="#5CB85C", hover_color="#4CAE4C").pack(side="left", padx=5)
+        ctk.CTkButton(btn_frame, text="Cancelar", command=win.destroy,
+                   fg_color="gray").pack(side="right", padx=5)
+
+    def _change_webui_port(self, new_port):
+        """Cambia el puerto de Open WebUI: actualiza .env, recrea contenedor."""
+        self._reset_progress_frame()
+        threading.Thread(target=self._change_port_worker, args=(new_port,), daemon=True).start()
+
+    def _change_port_worker(self, new_port):
+        """Worker para cambiar el puerto de Open WebUI."""
+        self.log(f"=== Cambiando puerto de Open WebUI a {new_port} ===")
+
+        # 1. Actualizar .env
+        self.log("[1/4] Actualizando .env...")
+        env_path = os.path.join(PROJECT_DIR, ".env")
+        if os.path.exists(env_path):
+            with open(env_path, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+            with open(env_path, 'w', encoding='utf-8') as f:
+                found = False
+                for line in lines:
+                    if line.strip().startswith("WEBUI_PORT="):
+                        f.write(f"WEBUI_PORT={new_port}\n")
+                        found = True
+                    else:
+                        f.write(line)
+                if not found:
+                    f.write(f"WEBUI_PORT={new_port}\n")
+            self.log(f"  ✅ .env actualizado: WEBUI_PORT={new_port}")
+        else:
+            self.log("  ⚠️ No se encontró .env. Creando uno nuevo...")
+            with open(env_path, 'w', encoding='utf-8') as f:
+                f.write(f"WEBUI_PORT={new_port}\n")
+
+        # 2. Detener y eliminar contenedor
+        self.log("[2/4] Deteniendo Open WebUI...")
+        self._force_stop_container("open-webui")
+
+        # 3. Recrear con nuevo puerto
+        self.log(f"[3/4] Levantando Open WebUI en puerto {new_port}...")
+        self._run_cmd("docker compose up -d open-webui", "Recreando Open WebUI")
+
+        # 4. Esperar healthcheck
+        self.log("[4/4] Esperando a que Open WebUI inicie...")
+        self._wait_for_health(port=new_port)
+
+        self.log(f"\n✅ Puerto cambiado exitosamente a {new_port}")
+        self.log(f"🌐 Accede en: http://localhost:{new_port}")
+        self._finish_progress("Cerrar")
+
+        # Refrescar la pestaña de conexiones
+        self.after(0, self._refresh_connections)
+
+    def _wait_for_health(self, port=None, timeout=120):
         """Espera a que Open WebUI responda al healthcheck."""
+        if port is None:
+            port = self._get_current_port()
         self.log("[*] Esperando a que Open WebUI arranque (healthcheck)...")
         for i in range(timeout // 3):
             try:
@@ -967,7 +1366,7 @@ read -p "Presiona Enter para cerrar..."
         self.log("[!] Open WebUI no respondió al healthcheck en tiempo.")
         return False
 
-    def _wait_for_flavors(self, port=3000, timeout=120):
+    def _wait_for_flavors(self, port=None, timeout=120):
         """Espera a que los Sabores aparezcan en la API de Open WebUI."""
         expected = ["memex-coder", "memex-marketer", "memex-researcher", "memex-editor"]
         self.log("[*] Verificando que los Sabores estén disponibles...")
@@ -1101,7 +1500,7 @@ read -p "Presiona Enter para cerrar..."
 
     def _install_worker(self):
         self.log("=== Iniciando Instalación de Memex ===")
-        port = getattr(self, '_install_port', 3000)
+        port = getattr(self, '_install_port', None) or self._get_current_port()
         self.log(f"[*] Puerto configurado: {port}")
 
         # 1. Verificar entorno
@@ -1194,7 +1593,7 @@ read -p "Presiona Enter para cerrar..."
     def _open_webui(self):
         """Abre Open WebUI en el navegador."""
         import webbrowser
-        port = getattr(self, '_install_port', 3000)
+        port = self._get_current_port()
         webbrowser.open(f'http://localhost:{port}')
 
     def _open_grafana(self):
@@ -1240,11 +1639,11 @@ read -p "Presiona Enter para cerrar..."
                   text_color='#cc3333').pack(pady=2)
 
         services = [
-            ("memex-whoogle", "🌐 Whoogle (Buscador privado)", True),
-            ("memex-qdrant", "🗄️ Qdrant (Base vectorial RAG)", True),
-            ("memex-aider-cli", "💻 Aider (Programador CLI)", True),
-            ("memex-ollama", "🧠 Ollama (Motor de IA)", False),
-            ("memex-webui", "🌐 Open WebUI (Interfaz)", False),
+            ("searxng", "🌐 SearxNG (Buscador Privado)", True),
+            ("qdrant", "🗄️ Qdrant (Base vectorial RAG)", True),
+            ("aider", "💻 Aider (Programador CLI)", True),
+            ("ollama", "🧠 Ollama (Motor de IA)", False),
+            ("open-webui", "🌐 Open WebUI (Interfaz)", False),
         ]
 
         service_vars = []
@@ -1276,10 +1675,9 @@ read -p "Presiona Enter para cerrar..."
         self.log(f"=== Desinstalación Granular: {len(services)} servicios ===")
         for svc in services:
             self.log(f"\n[*] Eliminando {svc}...")
-            self._run_cmd(f"docker compose stop {svc}", f"Deteniendo {svc}")
-            self._run_cmd(f"docker compose rm -f {svc}", f"Removiendo contenedor {svc}")
+            self._force_stop_container(svc)
         self.log("\n✅ Desinstalación granular completada.")
-        self.log("Nota: Los volúmenes asociados se conservan. Usa 'docker volume prune' para limpiar.")
+        self.log("Nota: Los volúmenes nombrados se conservan. Usa 'docker volume prune' para limpiar.")
         self._finish_progress("Cerrar")
 
     def _open_granular_reinstaller(self):
@@ -1302,7 +1700,7 @@ read -p "Presiona Enter para cerrar..."
             ("🌐 Open WebUI (Interfaz Web / Cerebro)", "open-webui"),
             ("🧠 Ollama (Motor de Modelos)", "ollama"),
             ("🗄️ Qdrant (Base de datos RAG)", "qdrant"),
-            ("🌐 Whoogle (Buscador Privado)", "whoogle"),
+            ("🌐 SearxNG (Buscador Privado)", "searxng"),
         ]
         for label, value in services:
             ctk.CTkRadioButton(win, text=label, variable=selected_service,
@@ -1546,7 +1944,7 @@ read -p "Presiona Enter para cerrar..."
 
     def _update_system_worker(self, services):
         self.log(f"=== Actualizando {len(services)} servicio(s) ===")
-        port = getattr(self, '_install_port', 3000)
+        port = self._get_current_port()
 
         for i, svc in enumerate(services, 1):
             self.log(f"\n[{i}/{len(services)}] ⬆️ Actualizando {svc}...")
@@ -1556,11 +1954,23 @@ read -p "Presiona Enter para cerrar..."
                 f"Descargando última imagen de {svc}"
             )
             if success:
+                # Stop and remove old container robustly
+                self._force_stop_container(svc)
                 # Recreate container with new image
                 self._run_cmd(
                     f"docker compose up -d {svc}",
-                    f"Reiniciando {svc} con la nueva versión"
+                    f"Levantando {svc} con la nueva imagen"
                 )
+                # Para Ollama, verificar la versión actualizada
+                if svc == "ollama":
+                    self.log("  ⏳ Esperando a que Ollama inicie...")
+                    import time
+                    time.sleep(8)  # Dar tiempo a que el servicio arranque
+                    self.log("  🔄 Verificando versión actualizada de Ollama...")
+                    self._run_cmd(
+                        "docker exec memex-ollama ollama --version",
+                        "Verificando versión de Ollama"
+                    )
                 self.log(f"  ✅ {svc} actualizado.")
             else:
                 self.log(f"  ❌ Error actualizando {svc}. Revisa tu conexión a Internet.")
