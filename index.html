@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memexicanisimos OS | IA Local</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#0B0F19',
+                        darker: '#05070A',
+                        neonPink: '#FF007F',
+                        neonCyan: '#00E5FF',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            background-color: #05070A;
+            color: #e2e8f0;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(255, 0, 127, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(0, 229, 255, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+        .glow-text {
+            text-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
+        }
+        .glow-pink {
+            text-shadow: 0 0 20px rgba(255, 0, 127, 0.5);
+        }
+        .border-gradient {
+            background: linear-gradient(to right, #FF007F, #00E5FF);
+            padding: 1px;
+            border-radius: 0.5rem;
+        }
+        .card-bg {
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col font-sans selection:bg-neonPink selection:text-white">
+
+    <!-- Navegación -->
+    <nav class="fixed w-full z-50 card-bg border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="cpu" class="text-neonCyan h-8 w-8"></i>
+                    <span class="font-bold text-xl tracking-wider text-white">MEMEX<span class="text-neonPink">OS</span></span>
+                </div>
+                <div>
+                    <a href="https://github.com/myinnervoid/memexicanisimos" target="_blank" class="flex items-center gap-2 text-gray-300 hover:text-white transition-colors">
+                        <i data-lucide="github" class="h-6 w-6"></i>
+                        <span class="hidden sm:inline font-mono text-sm">/myinnervoid</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <main class="flex-grow flex flex-col justify-center pt-24 pb-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-10 sm:mt-20">
+            <div class="inline-block mb-4 px-3 py-1 rounded-full border border-neonCyan/30 bg-neonCyan/10 text-neonCyan font-mono text-xs sm:text-sm">
+                v6.0 Sentience Edition Disponible
+            </div>
+            <h1 class="text-5xl sm:text-7xl font-extrabold tracking-tight text-white mb-6">
+                Cerebro y Extremidades de <br class="hidden sm:block">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-neonPink to-neonCyan glow-text">IA 100% Locales</span>
+            </h1>
+            <p class="mt-4 max-w-2xl mx-auto text-xl text-gray-400 mb-10">
+                Un entorno de desarrollo autónomo con memoria persistente, orquestación de agentes y programación en terminal. Diseñado para hardware básico (16GB RAM).
+            </p>
+            
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="https://github.com/myinnervoid/memexicanisimos" target="_blank" class="border-gradient inline-block group">
+                    <div class="bg-dark px-8 py-3 rounded-lg flex items-center justify-center gap-2 group-hover:bg-transparent transition-all duration-300">
+                        <i data-lucide="github" class="text-white"></i>
+                        <span class="text-white font-semibold">Ver Código en GitHub</span>
+                    </div>
+                </a>
+                <a href="#arquitectura" class="px-8 py-3 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-300 font-semibold flex items-center justify-center gap-2">
+                    <i data-lucide="terminal"></i>
+                    Descubrir Arquitectura
+                </a>
+            </div>
+
+            <!-- Terminal Mockup -->
+            <div class="mt-16 max-w-3xl mx-auto text-left">
+                <div class="rounded-t-lg bg-gray-900 border border-gray-800 p-2 flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span class="ml-2 text-xs text-gray-500 font-mono">instalador_memex.sh</span>
+                </div>
+                <div class="rounded-b-lg bg-black border border-t-0 border-gray-800 p-6 font-mono text-sm sm:text-base overflow-x-auto">
+                    <p class="text-gray-400"># Clonar repositorio e instalar</p>
+                    <p class="text-green-400">git clone https://github.com/myinnervoid/Memexicanisimos.git .</p>
+                    <p class="text-green-400 mt-1">python3 memex_gui.py</p>
+                    <p class="text-cyan-400 mt-4">> Iniciando Memexicanisimos OS v6.0...</p>
+                    <p class="text-cyan-400">> Detectando Hardware: 16GB RAM / Intel UHD</p>
+                    <p class="text-pink-500">> Recomendación: Qwen3.5:9B - [OK]</p>
+                    <p class="text-white mt-2 animate-pulse">_</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Arquitectura Section -->
+        <div id="arquitectura" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-32 mb-20">
+            <h2 class="text-3xl font-bold text-white text-center mb-16"><span class="text-neonCyan">/</span> El Fuerte Inexpugnable</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Docker -->
+                <div class="card-bg p-8 rounded-xl border border-gray-800 hover:border-neonCyan transition-colors">
+                    <i data-lucide="container" class="h-10 w-10 text-neonCyan mb-4"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">Docker Aislado</h3>
+                    <p class="text-gray-400 text-sm">Cero conflictos de puertos. Detección inteligente (3000-3020) que asegura que Memex nunca choque con servicios en tu máquina.</p>
+                </div>
+                
+                <!-- Ollama -->
+                <div class="card-bg p-8 rounded-xl border border-gray-800 hover:border-neonPink transition-colors">
+                    <i data-lucide="brain-circuit" class="h-10 w-10 text-neonPink mb-4"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">Motor Ollama</h3>
+                    <p class="text-gray-400 text-sm">Configurado quirúrgicamente para máxima eficiencia. Ejecución secuencial estricta y límite seguro de contexto para prevenir explosiones de RAM.</p>
+                </div>
+
+                <!-- Open WebUI -->
+                <div class="card-bg p-8 rounded-xl border border-gray-800 hover:border-neonCyan transition-colors">
+                    <i data-lucide="layout-dashboard" class="h-10 w-10 text-neonCyan mb-4"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">Cerebro y Sabores</h3>
+                    <p class="text-gray-400 text-sm">Tu panel de control. Cargado con Agentes especializados: Coder, Marketer, Researcher y un Auto-Router que ahorra recursos en tiempo real.</p>
+                </div>
+
+                <!-- Aider CLI -->
+                <div class="card-bg p-8 rounded-xl border border-gray-800 hover:border-neonPink transition-colors">
+                    <i data-lucide="terminal-square" class="h-10 w-10 text-neonPink mb-4"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">Aider CLI (Extremidades)</h3>
+                    <p class="text-gray-400 text-sm">Mientras WebUI planifica, Aider ejecuta código en tu terminal. Conectado a tu mismo modelo local, consumiendo menos de 100MB de RAM.</p>
+                </div>
+
+                <!-- Memoria FTS5 -->
+                <div class="card-bg p-8 rounded-xl border border-gray-800 hover:border-neonCyan transition-colors">
+                    <i data-lucide="database" class="h-10 w-10 text-neonCyan mb-4"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">Memoria Persistente</h3>
+                    <p class="text-gray-400 text-sm">Tu agente no sufre amnesia. Usando SQLite FTS5 recuerda reglas de negocio y con Qdrant (RAG) indexa repositorios completos.</p>
+                </div>
+
+                <!-- GUI CustomTkinter -->
+                <div class="card-bg p-8 rounded-xl border border-gray-800 hover:border-neonPink transition-colors">
+                    <i data-lucide="mouse-pointer-click" class="h-10 w-10 text-neonPink mb-4"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">Panel GUI Avanzado</h3>
+                    <p class="text-gray-400 text-sm">Reinstalador granular, actualizador selectivo, solucionador IA clínico y catálogo dinámico que se ajusta a tu hardware real.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 bg-darker py-8 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p class="text-gray-500 text-sm">
+                © 2026 Memexicanisimos OS. De Cancún para el mundo. 🦅
+            </p>
+            <div class="flex gap-4">
+                <a href="https://github.com/myinnervoid/memexicanisimos" target="_blank" class="text-gray-500 hover:text-white transition-colors">
+                    <i data-lucide="github" class="h-5 w-5"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Inicializar iconos de Lucide
+        lucide.createIcons();
+    </script>
+</body>
+</html>
