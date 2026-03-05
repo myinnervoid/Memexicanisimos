@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="es" class="scroll-smooth">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Memexicanisimos OS | IA Local</title>
+    <meta name="description"
+        content="Un entorno de desarrollo autónomo con memoria persistente, orquestación de agentes y programación en terminal diseñado para hardware básico.">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,60 +15,220 @@
                 extend: {
                     colors: {
                         dark: '#0B0F19',
-                        darker: '#05070A',
+                        darker: '#030508',
                         neonPink: '#FF007F',
                         neonCyan: '#00E5FF',
+                        cyberPurple: '#8A2BE2',
                     },
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
+                        sans: ['Outfit', 'Inter', 'sans-serif'],
                         mono: ['Fira Code', 'monospace'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-glow': 'pulse-glow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'typing': 'blink 1s step-end infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        'pulse-glow': {
+                            '0%, 100%': { opacity: 1 },
+                            '50%': { opacity: .5 },
+                        },
+                        blink: {
+                            '0%, 100%': { opacity: 1 },
+                            '50%': { opacity: 0 },
+                        }
                     }
                 }
             }
         }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Outfit:wght@300;400;600;800;900&display=swap"
+        rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
-            background-color: #05070A;
+            background-color: #030508;
             color: #e2e8f0;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(255, 0, 127, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(0, 229, 255, 0.15) 0px, transparent 50%);
-            background-attachment: fixed;
+            position: relative;
+            overflow-x: hidden;
         }
+
+        /* Animated Mesh Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(255, 0, 127, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 30%, rgba(0, 229, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 50% 80%, rgba(138, 43, 226, 0.06) 0%, transparent 50%);
+            z-index: -1;
+            pointer-events: none;
+            animation: backgroundShift 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes backgroundShift {
+            0% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1.1);
+            }
+        }
+
         .glow-text {
-            text-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
+            text-shadow: 0 0 30px rgba(0, 229, 255, 0.6), 0 0 60px rgba(0, 229, 255, 0.2);
         }
-        .glow-pink {
-            text-shadow: 0 0 20px rgba(255, 0, 127, 0.5);
+
+        .glow-pink-text {
+            text-shadow: 0 0 30px rgba(255, 0, 127, 0.6);
         }
+
         .border-gradient {
-            background: linear-gradient(to right, #FF007F, #00E5FF);
-            padding: 1px;
-            border-radius: 0.5rem;
+            background: linear-gradient(135deg, #FF007F, #00E5FF, #8A2BE2);
+            padding: 2px;
+            border-radius: 0.75rem;
+            background-size: 200% 200%;
+            animation: gradientShift 5s ease infinite;
         }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
         .card-bg {
-            background: rgba(11, 15, 25, 0.8);
-            backdrop-filter: blur(12px);
+            background: rgba(11, 15, 25, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Advanced Card Hover Effects */
+        .feature-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 2px;
+            background: linear-gradient(135deg, rgba(0, 229, 255, 0.3), rgba(255, 0, 127, 0.3));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px -10px rgba(0, 229, 255, 0.15), 0 0 20px rgba(255, 0, 127, 0.1);
+            background: rgba(15, 20, 35, 0.8);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon-wrapper {
+            transition: transform 0.5s ease;
+        }
+
+        .feature-card:hover .feature-icon-wrapper {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* Scroll Animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #030508;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1f2937;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FF007F;
         }
     </style>
 </head>
+
 <body class="antialiased min-h-screen flex flex-col font-sans selection:bg-neonPink selection:text-white">
 
     <!-- Navegación -->
-    <nav class="fixed w-full z-50 card-bg border-b border-gray-800">
+    <nav class="fixed w-full z-50 card-bg border-b border-white/5 transition-all duration-300" id="navbar">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="cpu" class="text-neonCyan h-8 w-8"></i>
-                    <span class="font-bold text-xl tracking-wider text-white">MEMEX<span class="text-neonPink">OS</span></span>
+            <div class="flex items-center justify-between h-20">
+                <div class="flex items-center gap-3 cursor-pointer group">
+                    <div
+                        class="relative flex items-center justify-center p-2 rounded-lg bg-white/5 border border-white/10 group-hover:border-neonCyan/50 group-hover:bg-neonCyan/10 transition-colors">
+                        <i data-lucide="cpu"
+                            class="text-neonCyan h-7 w-7 transition-transform group-hover:rotate-12 duration-300"></i>
+                    </div>
+                    <span class="font-extrabold text-2xl tracking-widest text-white"><a href="index.html">MEMEX<span
+                                class="text-transparent bg-clip-text bg-gradient-to-r from-neonPink to-cyberPurple glow-pink-text">OS</span></a></span>
                 </div>
+
+                <!-- Desktop Links -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="faq.html"
+                        class="text-gray-300 hover:text-white transition-colors duration-300 font-medium text-sm">FAQ</a>
+                    <a href="history.html"
+                        class="text-gray-300 hover:text-white transition-colors duration-300 font-medium text-sm">Historia</a>
+                    <a href="configurator.html"
+                        class="text-gray-300 hover:text-white transition-colors duration-300 font-medium text-sm">Guía
+                        Docker</a>
+                    <a href="mailto:myinnervoid@gmail.com"
+                        class="text-gray-300 hover:text-white transition-colors duration-300 font-medium text-sm">Contacto</a>
+                </div>
+
                 <div>
-                    <a href="https://github.com/myinnervoid/memexicanisimos" target="_blank" class="flex items-center gap-2 text-gray-300 hover:text-white transition-colors">
-                        <i data-lucide="github" class="h-6 w-6"></i>
-                        <span class="hidden sm:inline font-mono text-sm">/myinnervoid</span>
+                    <a href="https://github.com/myinnervoid/memexicanisimos" target="_blank"
+                        class="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-700 text-gray-300 hover:text-white hover:border-neonCyan hover:bg-neonCyan/10 transition-all duration-300">
+                        <i data-lucide="github" class="h-5 w-5"></i>
+                        <span class="hidden sm:inline font-mono text-sm font-medium">/myinnervoid</span>
                     </a>
                 </div>
             </div>
@@ -73,111 +236,264 @@
     </nav>
 
     <!-- Hero Section -->
-    <main class="flex-grow flex flex-col justify-center pt-24 pb-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-10 sm:mt-20">
-            <div class="inline-block mb-4 px-3 py-1 rounded-full border border-neonCyan/30 bg-neonCyan/10 text-neonCyan font-mono text-xs sm:text-sm">
+    <main class="flex-grow flex flex-col justify-center pt-32 pb-16 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-10 sm:mt-20 z-10 w-full relative">
+
+            <!-- Floating Decorative Elements -->
+            <div class="absolute top-10 left-[10%] opacity-20 animate-float" style="animation-delay: 0s;">
+                <i data-lucide="layers" class="h-16 w-16 text-neonCyan"></i>
+            </div>
+            <div class="absolute top-40 right-[15%] opacity-20 animate-float" style="animation-delay: 2s;">
+                <i data-lucide="bot" class="h-20 w-20 text-neonPink"></i>
+            </div>
+
+            <div
+                class="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full border border-neonCyan/40 bg-neonCyan/10 text-neonCyan font-mono text-xs sm:text-sm shadow-[0_0_15px_rgba(0,229,255,0.2)] animate-pulse-glow">
+                <div class="w-1.5 h-1.5 rounded-full bg-neonCyan"></div>
                 v6.0 Sentience Edition Disponible
             </div>
-            <h1 class="text-5xl sm:text-7xl font-extrabold tracking-tight text-white mb-6">
+
+            <h1
+                class="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white mb-6 leading-tight max-w-5xl mx-auto">
                 Cerebro y Extremidades de <br class="hidden sm:block">
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-neonPink to-neonCyan glow-text">IA 100% Locales</span>
+                <span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-neonPink via-cyberPurple to-neonCyan glow-text inline-block transform hover:scale-105 transition-transform duration-500 cursor-default">IA
+                    100% Locales</span>
             </h1>
-            <p class="mt-4 max-w-2xl mx-auto text-xl text-gray-400 mb-10">
-                Un entorno de desarrollo autónomo con memoria persistente, orquestación de agentes y programación en terminal. Diseñado para hardware básico (16GB RAM).
+
+            <p class="mt-8 max-w-2xl mx-auto text-xl sm:text-2xl text-gray-400 font-light leading-relaxed mb-12">
+                Un entorno de desarrollo autónomo con memoria persistente, orquestación de agentes y programación en
+                terminal. Diseñado para hardware básico.
             </p>
-            
-            <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <a href="https://github.com/myinnervoid/memexicanisimos" target="_blank" class="border-gradient inline-block group">
-                    <div class="bg-dark px-8 py-3 rounded-lg flex items-center justify-center gap-2 group-hover:bg-transparent transition-all duration-300">
-                        <i data-lucide="github" class="text-white"></i>
-                        <span class="text-white font-semibold">Ver Código en GitHub</span>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-6 items-center">
+                <a href="https://github.com/myinnervoid/memexicanisimos" target="_blank"
+                    class="border-gradient inline-block group w-full sm:w-auto shadow-[0_0_20px_rgba(255,0,127,0.3)] hover:shadow-[0_0_30px_rgba(0,229,255,0.4)] transition-shadow duration-300">
+                    <div
+                        class="bg-darker px-8 py-4 rounded-xl flex items-center justify-center gap-3 group-hover:bg-opacity-80 transition-all duration-300">
+                        <i data-lucide="github" class="text-white h-6 w-6"></i>
+                        <span class="text-white font-bold text-lg tracking-wide">Clonar en GitHub</span>
+                        <i data-lucide="arrow-right"
+                            class="text-neonCyan h-5 w-5 transform group-hover:translate-x-1 transition-transform"></i>
                     </div>
                 </a>
-                <a href="#arquitectura" class="px-8 py-3 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-300 font-semibold flex items-center justify-center gap-2">
-                    <i data-lucide="terminal"></i>
+                <a href="#arquitectura"
+                    class="w-full sm:w-auto px-8 py-4 rounded-xl border border-white/10 text-gray-300 bg-white/5 hover:bg-white/10 hover:border-white/20 hover:text-white transition-all duration-300 font-semibold text-lg flex items-center justify-center gap-3 backdrop-blur-sm">
+                    <i data-lucide="terminal" class="text-gray-400 hover:text-white"></i>
                     Descubrir Arquitectura
                 </a>
             </div>
 
-            <!-- Terminal Mockup -->
-            <div class="mt-16 max-w-3xl mx-auto text-left">
-                <div class="rounded-t-lg bg-gray-900 border border-gray-800 p-2 flex items-center gap-2">
-                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                    <span class="ml-2 text-xs text-gray-500 font-mono">instalador_memex.sh</span>
+            <!-- Enhanced Terminal Mockup -->
+            <div
+                class="mt-24 max-w-4xl mx-auto text-left reveal transform transition-all duration-1000 w-full shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                <div class="rounded-t-xl bg-[#1e1e1e] border-b border-black/50 p-3 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5 px-2">
+                        <div
+                            class="w-3.5 h-3.5 rounded-full border border-red-500/50 bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]">
+                        </div>
+                        <div
+                            class="w-3.5 h-3.5 rounded-full border border-yellow-500/50 bg-yellow-500 shadow-[0_0_5px_rgba(234,179,8,0.5)]">
+                        </div>
+                        <div
+                            class="w-3.5 h-3.5 rounded-full border border-green-500/50 bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]">
+                        </div>
+                    </div>
+                    <div class="flex-1 text-center font-mono text-xs text-gray-500 font-medium tracking-wider">
+                        myinnervoid@memexOS: ~/workspace
+                    </div>
+                    <div class="w-14"></div> <!-- Spacer for centering -->
                 </div>
-                <div class="rounded-b-lg bg-black border border-t-0 border-gray-800 p-6 font-mono text-sm sm:text-base overflow-x-auto">
-                    <p class="text-gray-400"># Clonar repositorio e instalar</p>
-                    <p class="text-green-400">git clone https://github.com/myinnervoid/Memexicanisimos.git .</p>
-                    <p class="text-green-400 mt-1">python3 memex_gui.py</p>
-                    <p class="text-cyan-400 mt-4">> Iniciando Memexicanisimos OS v6.0...</p>
-                    <p class="text-cyan-400">> Detectando Hardware: 16GB RAM / Intel UHD</p>
-                    <p class="text-pink-500">> Recomendación: Qwen3.5:9B - [OK]</p>
-                    <p class="text-white mt-2 animate-pulse">_</p>
-                </div>
-            </div>
-        </div>
+                <div
+                    class="rounded-b-xl bg-[#0a0a0a] p-8 font-mono text-[15px] sm:text-base overflow-x-auto relative line-height-relaxed border border-t-0 border-white/5">
+                    <div
+                        class="absolute top-0 left-0 w-full h-full bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] pointer-events-none opacity-20">
+                    </div>
+                    <p class="text-gray-500 mb-2 font-semibold"># Dependencias e Instalación</p>
+                    <p class="text-neonCyan mb-1 flex items-center">
+                        <span class="text-green-500 mr-2">➜</span>
+                        <span class="text-blue-400 mr-2">~</span>
+                        sudo apt install -y python3-yaml python3-tk git
+                    </p>
+                    <p class="text-neonCyan mb-1 flex items-center">
+                        <span class="text-green-500 mr-2">➜</span>
+                        <span class="text-blue-400 mr-2">~</span>
+                        pip install customtkinter
+                    </p>
+                    <p class="text-neonCyan mb-1 flex items-center">
+                        <span class="text-green-500 mr-2">➜</span>
+                        <span class="text-blue-400 mr-2">~</span>
+                        mkdir -p ~/Memexicanisimos && cd ~/Memexicanisimos
+                    </p>
+                    <p class="text-neonCyan mb-1 flex items-center">
+                        <span class="text-green-500 mr-2">➜</span>
+                        <span class="text-blue-400 mr-2">~</span>
+                        git clone https://github.com/myinnervoid/Memexicanisimos.git .
+                    </p>
+                    <p class="text-neonCyan mb-6 flex items-center">
+                        <span class="text-green-500 mr-2">➜</span>
+                        <span class="text-blue-400 mr-2">~</span>
+                        python3 memex_gui.py
+                    </p>
 
-        <!-- Arquitectura Section -->
-        <div id="arquitectura" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-32 mb-20">
-            <h2 class="text-3xl font-bold text-white text-center mb-16"><span class="text-neonCyan">/</span> El Fuerte Inexpugnable</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Docker -->
-                <div class="card-bg p-8 rounded-xl border border-gray-800 hover:border-neonCyan transition-colors">
-                    <i data-lucide="container" class="h-10 w-10 text-neonCyan mb-4"></i>
-                    <h3 class="text-xl font-bold text-white mb-2">Docker Aislado</h3>
-                    <p class="text-gray-400 text-sm">Cero conflictos de puertos. Detección inteligente (3000-3020) que asegura que Memex nunca choque con servicios en tu máquina.</p>
-                </div>
-                
-                <!-- Ollama -->
-                <div class="card-bg p-8 rounded-xl border border-gray-800 hover:border-neonPink transition-colors">
-                    <i data-lucide="brain-circuit" class="h-10 w-10 text-neonPink mb-4"></i>
-                    <h3 class="text-xl font-bold text-white mb-2">Motor Ollama</h3>
-                    <p class="text-gray-400 text-sm">Configurado quirúrgicamente para máxima eficiencia. Ejecución secuencial estricta y límite seguro de contexto para prevenir explosiones de RAM.</p>
-                </div>
-
-                <!-- Open WebUI -->
-                <div class="card-bg p-8 rounded-xl border border-gray-800 hover:border-neonCyan transition-colors">
-                    <i data-lucide="layout-dashboard" class="h-10 w-10 text-neonCyan mb-4"></i>
-                    <h3 class="text-xl font-bold text-white mb-2">Cerebro y Sabores</h3>
-                    <p class="text-gray-400 text-sm">Tu panel de control. Cargado con Agentes especializados: Coder, Marketer, Researcher y un Auto-Router que ahorra recursos en tiempo real.</p>
-                </div>
-
-                <!-- Aider CLI -->
-                <div class="card-bg p-8 rounded-xl border border-gray-800 hover:border-neonPink transition-colors">
-                    <i data-lucide="terminal-square" class="h-10 w-10 text-neonPink mb-4"></i>
-                    <h3 class="text-xl font-bold text-white mb-2">Aider CLI (Extremidades)</h3>
-                    <p class="text-gray-400 text-sm">Mientras WebUI planifica, Aider ejecuta código en tu terminal. Conectado a tu mismo modelo local, consumiendo menos de 100MB de RAM.</p>
-                </div>
-
-                <!-- Memoria FTS5 -->
-                <div class="card-bg p-8 rounded-xl border border-gray-800 hover:border-neonCyan transition-colors">
-                    <i data-lucide="database" class="h-10 w-10 text-neonCyan mb-4"></i>
-                    <h3 class="text-xl font-bold text-white mb-2">Memoria Persistente</h3>
-                    <p class="text-gray-400 text-sm">Tu agente no sufre amnesia. Usando SQLite FTS5 recuerda reglas de negocio y con Qdrant (RAG) indexa repositorios completos.</p>
-                </div>
-
-                <!-- GUI CustomTkinter -->
-                <div class="card-bg p-8 rounded-xl border border-gray-800 hover:border-neonPink transition-colors">
-                    <i data-lucide="mouse-pointer-click" class="h-10 w-10 text-neonPink mb-4"></i>
-                    <h3 class="text-xl font-bold text-white mb-2">Panel GUI Avanzado</h3>
-                    <p class="text-gray-400 text-sm">Reinstalador granular, actualizador selectivo, solucionador IA clínico y catálogo dinámico que se ajusta a tu hardware real.</p>
+                    <div id="terminal-output" class="min-h-[120px]">
+                        <!-- Content injected by JS -->
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
+    <!-- Arquitectura Section -->
+    <div id="arquitectura" class="w-full relative py-32 bg-darker/50">
+        <!-- Top Gradient Divider -->
+        <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent">
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-20 reveal">
+                <div
+                    class="inline-flex items-center justify-center gap-2 mb-4 text-neonPink font-mono text-sm tracking-widest uppercase">
+                    <i data-lucide="shield-check" class="h-4 w-4"></i> Protegido & Aislado
+                </div>
+                <h2 class="text-4xl sm:text-5xl font-black text-white"><span
+                        class="text-transparent bg-clip-text bg-gradient-to-r from-neonCyan to-blue-500">/</span> El
+                    Fuerte Inexpugnable</h2>
+                <div class="w-24 h-1 bg-gradient-to-r from-neonPink to-neonCyan mx-auto mt-6 rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                <!-- Docker -->
+                <div class="card-bg feature-card p-8 rounded-2xl reveal border border-white/5">
+                    <div
+                        class="feature-icon-wrapper w-14 h-14 rounded-xl bg-neonCyan/10 border border-neonCyan/20 flex items-center justify-center mb-6">
+                        <i data-lucide="container"
+                            class="h-7 w-7 text-neonCyan drop-shadow-[0_0_8px_rgba(0,229,255,0.8)]"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3 tracking-tight">Docker Aislado</h3>
+                    <p class="text-gray-400 text-[15px] leading-relaxed">Cero conflictos de puertos. Detección
+                        inteligente (3000-3020) que asegura que Memex nunca choque con servicios en tu máquina operativa
+                        local.</p>
+                </div>
+
+                <!-- Ollama -->
+                <div class="card-bg feature-card p-8 rounded-2xl reveal border border-white/5"
+                    style="transition-delay: 100ms;">
+                    <div
+                        class="feature-icon-wrapper w-14 h-14 rounded-xl bg-neonPink/10 border border-neonPink/20 flex items-center justify-center mb-6">
+                        <i data-lucide="brain-circuit"
+                            class="h-7 w-7 text-neonPink drop-shadow-[0_0_8px_rgba(255,0,127,0.8)]"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3 tracking-tight">Motor Ollama</h3>
+                    <p class="text-gray-400 text-[15px] leading-relaxed">Configurado quirúrgicamente para máxima
+                        eficiencia. Ejecución secuencial estricta y límite seguro de contexto para prevenir explosiones
+                        de RAM.</p>
+                </div>
+
+                <!-- Open WebUI -->
+                <div class="card-bg feature-card p-8 rounded-2xl reveal border border-white/5"
+                    style="transition-delay: 200ms;">
+                    <div
+                        class="feature-icon-wrapper w-14 h-14 rounded-xl bg-cyberPurple/10 border border-cyberPurple/20 flex items-center justify-center mb-6">
+                        <i data-lucide="layout-dashboard"
+                            class="h-7 w-7 text-cyberPurple drop-shadow-[0_0_8px_rgba(138,43,226,0.8)]"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3 tracking-tight">Cerebro y Sabores</h3>
+                    <p class="text-gray-400 text-[15px] leading-relaxed">Tu panel de control. Cargado con Agentes
+                        especializados: Coder, Marketer, Researcher y un Auto-Router que ahorra recursos en tiempo real.
+                    </p>
+                </div>
+
+                <!-- Aider CLI -->
+                <div class="card-bg feature-card p-8 rounded-2xl reveal border border-white/5"
+                    style="transition-delay: 300ms;">
+                    <div
+                        class="feature-icon-wrapper w-14 h-14 rounded-xl bg-neonPink/10 border border-neonPink/20 flex items-center justify-center mb-6">
+                        <i data-lucide="terminal-square"
+                            class="h-7 w-7 text-neonPink drop-shadow-[0_0_8px_rgba(255,0,127,0.8)]"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3 tracking-tight">Aider CLI <span
+                            class="text-gray-500 font-normal text-lg">(Extremidades)</span></h3>
+                    <p class="text-gray-400 text-[15px] leading-relaxed">Mientras WebUI planifica, Aider ejecuta código
+                        en tu terminal. Conectado a tu mismo modelo local, consumiendo menos de 100MB de RAM
+                        adicionales.</p>
+                </div>
+
+                <!-- Memoria FTS5 -->
+                <div class="card-bg feature-card p-8 rounded-2xl reveal border border-white/5"
+                    style="transition-delay: 400ms;">
+                    <div
+                        class="feature-icon-wrapper w-14 h-14 rounded-xl bg-neonCyan/10 border border-neonCyan/20 flex items-center justify-center mb-6">
+                        <i data-lucide="database"
+                            class="h-7 w-7 text-neonCyan drop-shadow-[0_0_8px_rgba(0,229,255,0.8)]"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3 tracking-tight">Memoria Persistente</h3>
+                    <p class="text-gray-400 text-[15px] leading-relaxed">Tu agente no sufre amnesia. Usando SQLite FTS5
+                        recuerda reglas de negocio pasadas y con Qdrant (RAG) indexa repositorios completos para
+                        contexto total.</p>
+                </div>
+
+                <!-- GUI CustomTkinter -->
+                <div class="card-bg feature-card p-8 rounded-2xl reveal border border-white/5"
+                    style="transition-delay: 500ms;">
+                    <div
+                        class="feature-icon-wrapper w-14 h-14 rounded-xl bg-cyberPurple/10 border border-cyberPurple/20 flex items-center justify-center mb-6">
+                        <i data-lucide="mouse-pointer-click"
+                            class="h-7 w-7 text-cyberPurple drop-shadow-[0_0_8px_rgba(138,43,226,0.8)]"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3 tracking-tight">Panel GUI Avanzado</h3>
+                    <p class="text-gray-400 text-[15px] leading-relaxed">Reinstalador granular, actualizador selectivo,
+                        solucionador IA clínico y catálogo dinámico que se ajusta a las capacidades reales de tu
+                        hardware.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Minimal CTA -->
+    <div class="w-full py-20 bg-[#030508] relative overflow-hidden flex justify-center items-center">
+        <!-- Glowing orb behind CTA -->
+        <div
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-neonPink/20 rounded-full blur-[100px] pointer-events-none">
+        </div>
+
+        <div class="text-center z-10 reveal px-4">
+            <h2 class="text-3xl sm:text-4xl font-black text-white mb-8">Listo para la Autonomía Local?</h2>
+            <a href="https://github.com/myinnervoid/memexicanisimos" target="_blank"
+                class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-black font-bold text-lg hover:bg-gray-200 hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                Empezar Ahora
+                <i data-lucide="arrow-up-right" class="h-5 w-5"></i>
+            </a>
+        </div>
+    </div>
+
     <!-- Footer -->
-    <footer class="border-t border-gray-800 bg-darker py-8 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p class="text-gray-500 text-sm">
-                © 2026 Memexicanisimos OS. De Cancún para el mundo. 🦅
+    <footer class="border-t border-white/5 bg-[#020305] py-10">
+        <div
+            class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2">
+                <i data-lucide="cpu" class="text-gray-600 h-6 w-6"></i>
+                <span class="font-bold text-lg tracking-wider text-gray-500">MEMEX<span
+                        class="text-gray-600">OS</span></span>
+            </div>
+
+            <p class="text-gray-500 text-sm font-medium">
+                © <span id="year"></span> Memexicanisimos OS. <a href="mailto:myinnervoid@gmail.com"
+                    class="hover:text-white transition-colors">myinnervoid@gmail.com</a>
             </p>
+
             <div class="flex gap-4">
-                <a href="https://github.com/myinnervoid/memexicanisimos" target="_blank" class="text-gray-500 hover:text-white transition-colors">
+                <a href="mailto:myinnervoid@gmail.com" title="Contacto"
+                    class="p-2 rounded-full bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-300">
+                    <i data-lucide="mail" class="h-5 w-5"></i>
+                </a>
+                <a href="https://github.com/myinnervoid/memexicanisimos" target="_blank"
+                    class="p-2 rounded-full bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-300">
                     <i data-lucide="github" class="h-5 w-5"></i>
+                </a>
+                <a href="https://facebook.com/memexicanisimos/" target="_blank"
+                    class="p-2 rounded-full bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 hover:text-blue-500 transition-all duration-300">
+                    <i data-lucide="facebook" class="h-5 w-5"></i>
                 </a>
             </div>
         </div>
@@ -186,6 +502,86 @@
     <script>
         // Inicializar iconos de Lucide
         lucide.createIcons();
+
+        // Dynamic Year
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Navbar blur on scroll
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                navbar.classList.add('shadow-lg');
+                navbar.style.background = 'rgba(11, 15, 25, 0.9)';
+            } else {
+                navbar.classList.remove('shadow-lg');
+                navbar.style.background = 'rgba(11, 15, 25, 0.6)';
+            }
+        });
+
+        // Scroll Animation (Intersection Observer)
+        const revealElements = document.querySelectorAll('.reveal');
+
+        const revealOptions = {
+            threshold: 0.15,
+            rootMargin: "0px 0px -50px 0px"
+        };
+
+        const revealOnScroll = new IntersectionObserver(function (entries, observer) {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) {
+                    return;
+                } else {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, revealOptions);
+
+        revealElements.forEach(el => {
+            revealOnScroll.observe(el);
+        });
+
+        // Terminal Typing Effect
+        const terminalOutput = document.getElementById('terminal-output');
+        const lines = [
+            { text: "> Iniciando entorno seguro en Memexicanisimos OS v6.0...", class: "text-gray-300", delay: 800 },
+            { text: "> Analizando recursos del sistema...", class: "text-gray-400", delay: 600 },
+            { text: "> Detectando Hardware: 16GB RAM / Intel UHD", class: "text-cyan-400", delay: 900 },
+            { text: "> Configurando red Docker aislada [memex_network_secure]... OK", class: "text-green-400", delay: 400 },
+            { text: "> Inicializando base de datos SQLite FTS5... OK", class: "text-green-400", delay: 300 },
+            { text: "> Recomendación IA Activa: Qwen3.5:9B - [OPTIMO]", class: "text-pink-500 font-bold", delay: 700 },
+            { text: "> Estableciendo enlace simpático con agentes CLI...", class: "text-purple-400", delay: 800 },
+            { text: "> SISTEMA LISTO. Esperando input humano...", class: "text-white font-bold", delay: 500 }
+        ];
+
+        let currentLine = 0;
+
+        function typeLine() {
+            if (currentLine < lines.length) {
+                const lineData = lines[currentLine];
+                const p = document.createElement('p');
+                p.className = `${lineData.class} mt-1.5 opacity-0 transition-opacity duration-300 font-mono tracking-tight`;
+                p.textContent = lineData.text;
+                terminalOutput.appendChild(p);
+
+                // Trigger reflow to ensure transition works
+                void p.offsetWidth;
+                p.classList.remove('opacity-0');
+
+                currentLine++;
+                setTimeout(typeLine, lineData.delay);
+            } else {
+                // Add blinking cursor at the end
+                const cursor = document.createElement('span');
+                cursor.className = 'text-white font-bold text-lg animate-typing inline-block mt-2';
+                cursor.textContent = '█';
+                terminalOutput.appendChild(cursor);
+            }
+        }
+
+        // Start typing effect slightly after page load
+        setTimeout(typeLine, 1200);
     </script>
 </body>
+
 </html>

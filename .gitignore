@@ -51,3 +51,6 @@ flavors_config.json
 adapters/
 sin_usar/
 .updater/
+assets/
+Memex\ shots/*.txt
+Memex\ shots/*.md

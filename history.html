@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historia Remota | Memexicanisimos OS</title>
+    <meta name="description"
+        content="La historia y evolución de Memexicanisimos OS. Desde un script en Bash hasta un Sistema Operativo Cognitivo.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#0B0F19',
+                        darker: '#030508',
+                        neonPink: '#FF007F',
+                        neonCyan: '#00E5FF',
+                        cyberPurple: '#8A2BE2',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-glow': 'pulse-glow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        'pulse-glow': {
+                            '0%, 100%': { opacity: 1 },
+                            '50%': { opacity: .5 },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Outfit:wght@300;400;600;800;900&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            background-color: #030508;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        .glow-text {
+            text-shadow: 0 0 30px rgba(255, 0, 127, 0.6), 0 0 60px rgba(255, 0, 127, 0.2);
+        }
+
+        .glow-pink-text {
+            text-shadow: 0 0 30px rgba(255, 0, 127, 0.6);
+        }
+
+        .card-bg {
+            background: rgba(11, 15, 25, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Timeline Styles */
+        .timeline-container {
+            position: relative;
+        }
+
+        .timeline-container::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #FF007F, #00E5FF, #8A2BE2);
+            transform: translateX(-50%);
+            opacity: 0.3;
+        }
+
+        @media (max-width: 768px) {
+            .timeline-container::before {
+                left: 20px;
+                transform: translateX(0);
+            }
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 4rem;
+            width: 50%;
+        }
+
+        .timeline-item:nth-child(odd) {
+            left: 0;
+            padding-right: 3rem;
+            text-align: right;
+        }
+
+        .timeline-item:nth-child(even) {
+            left: 50%;
+            padding-left: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .timeline-item {
+                width: 100%;
+                left: 0 !important;
+                padding-left: 3.5rem !important;
+                padding-right: 0 !important;
+                text-align: left !important;
+            }
+        }
+
+        .timeline-dot {
+            position: absolute;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #030508;
+            border: 4px solid #FF007F;
+            z-index: 10;
+        }
+
+        .timeline-item:nth-child(odd) .timeline-dot {
+            right: -10px;
+        }
+
+        .timeline-item:nth-child(even) .timeline-dot {
+            left: -10px;
+        }
+
+        @media (max-width: 768px) {
+            .timeline-item:nth-child(odd) .timeline-dot {
+                right: auto;
+                left: 11px;
+            }
+
+            .timeline-item:nth-child(even) .timeline-dot {
+                left: 11px;
+            }
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Image hover zoom */
+        .history-img-wrapper {
+            overflow: hidden;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .history-img-wrapper img {
+            transition: transform 0.5s ease;
+        }
+
+        .history-img-wrapper:hover img {
+            transform: scale(1.05);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #030508;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1f2937;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FF007F;
+        }
+    </style>
+</head>
+
+<body class="antialiased min-h-screen flex flex-col font-sans selection:bg-neonPink selection:text-white">
+
+    <!-- Navegación -->
+    <nav class="fixed w-full z-50 card-bg border-b border-white/5 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <div class="flex items-center gap-3 cursor-pointer group">
+                    <div
+                        class="relative flex items-center justify-center p-2 rounded-lg bg-white/5 border border-white/10 group-hover:border-neonCyan/50 group-hover:bg-neonCyan/10 transition-colors">
+                        <i data-lucide="cpu"
+                            class="text-neonCyan h-7 w-7 transition-transform group-hover:rotate-12 duration-300"></i>
+                    </div>
+                    <span class="font-extrabold text-2xl tracking-widest text-white"><a href="index.html">MEMEX<span
+                                class="text-transparent bg-clip-text bg-gradient-to-r from-neonPink to-cyberPurple glow-pink-text">OS</span></a></span>
+                </div>
+
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="faq.html"
+                        class="text-gray-300 hover:text-white transition-colors duration-300 font-medium text-sm">FAQ</a>
+                    <a href="history.html"
+                        class="text-white border-b-2 border-neonPink pb-1 transition-colors duration-300 font-medium text-sm">Historia</a>
+                    <a href="configurator.html"
+                        class="text-gray-300 hover:text-white transition-colors duration-300 font-medium text-sm">Guía
+                        Docker</a>
+                    <a href="mailto:myinnervoid@gmail.com"
+                        class="text-gray-300 hover:text-white transition-colors duration-300 font-medium text-sm">Contacto</a>
+                </div>
+
+                <div>
+                    <a href="https://github.com/myinnervoid/memexicanisimos" target="_blank"
+                        class="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-700 text-gray-300 hover:text-white hover:border-neonCyan hover:bg-neonCyan/10 transition-all duration-300">
+                        <i data-lucide="github" class="h-5 w-5"></i>
+                        <span class="hidden sm:inline font-mono text-sm font-medium">/myinnervoid</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header Section -->
+    <header class="pt-40 pb-20 relative">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal border-b border-white/10 pb-12">
+            <h1 class="text-4xl sm:text-6xl font-black text-white mb-6">El Origen <br><span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-neonPink to-cyberPurple glow-text">y la
+                    Evolución</span></h1>
+            <p class="text-xl text-gray-400 font-light leading-relaxed max-w-2xl mx-auto">
+                Desde un humilde script en Bash para instalar Ollama hasta un ecosistema de IA Autónomo con gobernador
+                de memoria persistente.
+            </p>
+        </div>
+    </header>
+
+    <!-- Timeline Content -->
+    <main class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-32">
+        <div class="timeline-container">
+
+            <!-- v6.0 -->
+            <div class="timeline-item reveal">
+                <div class="timeline-dot border-neonCyan"></div>
+                <div class="card-bg p-6 rounded-2xl">
+                    <span class="text-neonCyan font-bold text-sm tracking-widest uppercase mb-2 block">Marzo 2026</span>
+                    <h3 class="text-2xl font-bold text-white mb-3">v6.0 — Sentience Edition</h3>
+                    <p class="text-gray-400 mb-4">Migración completa a interfaz oscura profesional con CustomTkinter.
+                        Catálogo dinámico de modelos basado en detección de hardware RAM y herramientas inteligentes de
+                        resolución de problemas.</p>
+                    <div class="history-img-wrapper mb-4">
+                        <img src="Memex%20shots/memex%206.0.png" alt="Memex OS v6.0 Sentience Edition con tema oscuro"
+                            class="w-full h-auto object-cover opacity-90 hover:opacity-100">
+                    </div>
+                    <ul class="text-left text-gray-500 text-sm space-y-2 inline-block">
+                        <li><i data-lucide="check-circle" class="w-4 h-4 inline text-neonCyan mr-1"></i> Tema oscuro
+                            profesional</li>
+                        <li><i data-lucide="check-circle" class="w-4 h-4 inline text-neonCyan mr-1"></i> Catálogo Top 10
+                            automático</li>
+                        <li><i data-lucide="check-circle" class="w-4 h-4 inline text-neonCyan mr-1"></i> Solucionador
+                            Clínico / FAQ</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- v5.2 -->
+            <div class="timeline-item reveal">
+                <div class="timeline-dot border-cyberPurple"></div>
+                <div class="card-bg p-6 rounded-2xl">
+                    <span class="text-cyberPurple font-bold text-sm tracking-widest uppercase mb-2 block">Previo a Marzo
+                        2026</span>
+                    <h3 class="text-2xl font-bold text-white mb-3">v5.4 — Hilos y Autómata</h3>
+                    <p class="text-gray-400 mb-4">Arquitectura de hilos no bloqueantes, Shield Físico y Network
+                        Retry-Loop para hosts Headless. Las descargas de modelos OLLAMA de 10GB dejaron de congelar la
+                        UI.</p>
+                    <div class="history-img-wrapper mb-4">
+                        <img src="Memex%20shots/memex%205.2.png" alt="Memex OS v5.2"
+                            class="w-full h-auto object-cover opacity-60 hover:opacity-100">
+                    </div>
+                </div>
+            </div>
+
+            <!-- v4.0 / v3.0 -->
+            <div class="timeline-item reveal">
+                <div class="timeline-dot border-neonPink"></div>
+                <div class="card-bg p-6 rounded-2xl">
+                    <span class="text-neonPink font-bold text-sm tracking-widest uppercase mb-2 block">Génesis y
+                        Evolución</span>
+                    <h3 class="text-2xl font-bold text-white mb-3">v3.0 / v4.0 — Cerebro y Extremidades</h3>
+                    <p class="text-gray-400 mb-4">Aider se integró como las "Extremidades" a través de docker. Llegó el
+                        Gobernador de Memoria y la Observabilidad Industrial con Prometheus y Grafana (v4.0).</p>
+                    <div class="history-img-wrapper mb-4">
+                        <img src="Memex%20shots/memex%203.0.png" alt="Memex OS v3.0 Panel Antiguo"
+                            class="w-full h-auto object-cover rounded-md opacity-60 hover:opacity-100 mix-blend-luminosity hover:mix-blend-normal">
+                    </div>
+                </div>
+            </div>
+
+            <!-- v1.0 / v2.0 -->
+            <div class="timeline-item reveal">
+                <div class="timeline-dot border-white"></div>
+                <div class="card-bg p-6 rounded-2xl border-white/10">
+                    <span class="text-gray-300 font-bold text-sm tracking-widest uppercase mb-2 block">Febrero
+                        2026</span>
+                    <h3 class="text-2xl font-bold text-white mb-3">v1.0 & v2.0 — El Origen</h3>
+                    <p class="text-gray-400 mb-4">Comenzó como un instalador interactivo simple en Bash (`install.sh`)
+                        para Ollama y Open WebUI. Luego, saltó a una primer interfaz precaria (`memex_gui.py`)
+                        introduciendo memorias de sistema locales FTS5.</p>
+                    <div class="history-img-wrapper mb-4">
+                        <img src="Memex%20shots/memex%201.0.png" alt="Memex OS v1.0 Shell"
+                            class="w-full h-auto object-cover rounded-md opacity-50 hover:opacity-100 grayscale hover:grayscale-0 transition-all duration-500">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 bg-[#020305] py-10">
+        <div
+            class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2">
+                <i data-lucide="cpu" class="text-gray-600 h-6 w-6"></i>
+                <span class="font-bold text-lg tracking-wider text-gray-500">MEMEX<span
+                        class="text-gray-600">OS</span></span>
+            </div>
+            <p class="text-gray-500 text-sm font-medium">
+                © <span id="year"></span> Memexicanisimos OS. <a href="mailto:myinnervoid@gmail.com"
+                    class="hover:text-white transition-colors">myinnervoid@gmail.com</a>
+            </p>
+            <div class="flex gap-4">
+                <a href="mailto:myinnervoid@gmail.com" title="Contacto"
+                    class="p-2 rounded-full bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-300">
+                    <i data-lucide="mail" class="h-5 w-5"></i>
+                </a>
+                <a href="https://github.com/myinnervoid/memexicanisimos" target="_blank"
+                    class="p-2 rounded-full bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-300">
+                    <i data-lucide="github" class="h-5 w-5"></i>
+                </a>
+                <a href="https://facebook.com/memexicanisimos/" target="_blank"
+                    class="p-2 rounded-full bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 hover:text-blue-500 transition-all duration-300">
+                    <i data-lucide="facebook" class="h-5 w-5"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                navbar.classList.add('shadow-lg');
+                navbar.style.background = 'rgba(11, 15, 25, 0.9)';
+            } else {
+                navbar.classList.remove('shadow-lg');
+                navbar.style.background = 'rgba(11, 15, 25, 0.6)';
+            }
+        });
+
+        const revealElements = document.querySelectorAll('.reveal');
+        const revealOptions = { threshold: 0.15, rootMargin: "0px 0px -50px 0px" };
+        const revealOnScroll = new IntersectionObserver(function (entries, observer) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, revealOptions);
+
+        revealElements.forEach(el => revealOnScroll.observe(el));
+    </script>
+</body>
+
+</html>
